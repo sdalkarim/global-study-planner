@@ -140,13 +140,11 @@ function FieldError({ message }: { message?: string }) {
 
 function Field({
   label,
-  required,
   error,
   children,
   htmlFor,
 }: {
   label: string;
-  required?: boolean;
   error?: string;
   children: React.ReactNode;
   htmlFor?: string;
@@ -155,7 +153,6 @@ function Field({
     <div>
       <Label htmlFor={htmlFor} className="mb-2 block text-sm font-semibold">
         {label}
-        {required ? <span className="ml-1 text-destructive">*</span> : null}
       </Label>
       {children}
       <FieldError message={error} />
@@ -183,50 +180,18 @@ function FormPage() {
   function validateStep(index: number): boolean {
     const e: Errors = {};
     if (index === 0) {
-      if (!data.full_name.trim()) e.full_name = "Nama lengkap wajib diisi.";
-      if (!data.whatsapp.trim()) e.whatsapp = "Nomor WhatsApp wajib diisi.";
-      else if (!isPhone(data.whatsapp)) e.whatsapp = "Format nomor WhatsApp tidak valid.";
-      if (!data.email.trim()) e.email = "Email wajib diisi.";
-      else if (!isEmail(data.email)) e.email = "Format email tidak valid.";
-    }
-    if (index === 1) {
-      if (!data.program_interest) e.program_interest = "Pilih program yang Anda minati.";
-      if (!data.study_level) e.study_level = "Pilih jenjang studi yang dituju.";
-      if (!data.applicant_type) e.applicant_type = "Pilih status pendaftar.";
-    }
-    if (index === 2) {
-      if (!data.current_status) e.current_status = "Pilih status Anda saat ini.";
-      if (!data.school_university.trim())
-        e.school_university = "Nama sekolah/universitas/instansi wajib diisi.";
-      if (needsClass(data.current_status) && !data.class) e.class = "Pilih kelas Anda.";
-      if (needsSemester(data.current_status) && !data.semester)
-        e.semester = "Pilih semester Anda.";
-      if (needsGraduationYear(data.current_status) && !data.graduation_year)
-        e.graduation_year = "Pilih tahun lulus.";
-      if (needsWorkInfo(data.current_status)) {
-        if (!data.work_duration) e.work_duration = "Pilih lama bekerja.";
-        if (!data.last_work_duration)
-          e.last_work_duration = "Pilih masa bekerja di pekerjaan terakhir.";
-        if (!data.work_field.trim()) e.work_field = "Isi bidang pekerjaan Anda.";
+      // Only format validation if user entered data (optional)
+      if (data.whatsapp.trim() && !isPhone(data.whatsapp)) {
+        e.whatsapp = "Format nomor WhatsApp tidak valid.";
+      }
+      if (data.email.trim() && !isEmail(data.email)) {
+        e.email = "Format email tidak valid.";
       }
     }
     if (index === 3) {
-      if (!data.parent_name.trim()) e.parent_name = "Nama orang tua/wali wajib diisi.";
-      if (!data.parent_whatsapp.trim())
-        e.parent_whatsapp = "Nomor WhatsApp orang tua/wali wajib diisi.";
-      else if (!isPhone(data.parent_whatsapp))
+      if (data.parent_whatsapp.trim() && !isPhone(data.parent_whatsapp)) {
         e.parent_whatsapp = "Format nomor WhatsApp tidak valid.";
-      if (data.parent_occupation === "Pekerjaan Lainnya" && !data.parent_occupation_other.trim())
-        e.parent_occupation_other = "Sebutkan pekerjaan orang tua/wali.";
-    }
-    if (index === 4) {
-      if (!data.intake_plan) e.intake_plan = "Pilih rencana memulai kuliah.";
-      if (!data.destination_country.trim())
-        e.destination_country = "Isi negara tujuan yang diminati.";
-      if (!data.intended_major.trim()) e.intended_major = "Isi program studi/jurusan yang diminati.";
-    }
-    if (index === 5) {
-      if (!data.consent) e.consent = "Anda harus menyetujui pernyataan ini.";
+      }
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -234,7 +199,7 @@ function FormPage() {
 
   function next() {
     if (!validateStep(step)) {
-      toast.error("Mohon lengkapi data yang wajib diisi.");
+      toast.error("Mohon periksa kembali format data yang diisi.");
       return;
     }
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
@@ -250,45 +215,45 @@ function FormPage() {
     for (let i = 0; i <= 5; i++) {
       if (!validateStep(i)) {
         setStep(i);
-        toast.error("Mohon lengkapi data yang wajib diisi.");
+        toast.error("Mohon periksa kembali format data yang diisi.");
         return;
       }
     }
     setSubmitting(true);
     const status = data.current_status;
     const payload = {
-      full_name: data.full_name.trim(),
-      whatsapp: data.whatsapp.trim(),
-      email: data.email.trim().toLowerCase(),
-      program_interest: data.program_interest,
-      study_level: data.study_level,
-      applicant_type: data.applicant_type,
-      current_status: status,
-      school_university: data.school_university.trim(),
+      full_name: data.full_name.trim() || "",
+      whatsapp: data.whatsapp.trim() || "",
+      email: data.email.trim().toLowerCase() || "",
+      program_interest: data.program_interest || "",
+      study_level: data.study_level || "",
+      applicant_type: data.applicant_type || "",
+      current_status: status || "",
+      school_university: data.school_university.trim() || "",
       class: needsClass(status) ? data.class || null : null,
       semester: needsSemester(status) ? data.semester || null : null,
       graduation_year: needsGraduationYear(status) ? Number(data.graduation_year) || null : null,
       work_duration: needsWorkInfo(status) ? data.work_duration || null : null,
       last_work_duration: needsWorkInfo(status) ? data.last_work_duration || null : null,
       work_field: needsWorkInfo(status) ? data.work_field.trim() || null : null,
-      parent_name: data.parent_name.trim(),
-      parent_whatsapp: data.parent_whatsapp.trim(),
+      parent_name: data.parent_name.trim() || "",
+      parent_whatsapp: data.parent_whatsapp.trim() || "",
       parent_occupation: data.parent_occupation || null,
       parent_occupation_other:
         data.parent_occupation === "Pekerjaan Lainnya"
           ? data.parent_occupation_other.trim() || null
           : null,
-      intake_plan: data.intake_plan,
-      destination_country: data.destination_country.trim(),
-      intended_major: data.intended_major.trim(),
-      funding_preference: data.funding_preference,
+      intake_plan: data.intake_plan || "",
+      destination_country: data.destination_country.trim() || "",
+      intended_major: data.intended_major.trim() || "",
+      funding_preference: data.funding_preference || [],
       consent: data.consent,
     };
 
     const { error } = await supabase.from("applications").insert(payload);
     setSubmitting(false);
     if (error) {
-      toast.error("Gagal mengirim formulir. Silakan coba lagi.");
+      toast.error("Gagal mengirim formulir. Silakan coba lagi: " + error.message);
       return;
     }
     toast.success("Formulir berhasil dikirim!");
@@ -347,7 +312,7 @@ function FormPage() {
               memberikan informasi, arahan, dan rekomendasi yang sesuai dengan kebutuhan persiapan
               kuliah ke luar negeri.
             </p>
-            <p>Silakan isi data berikut dengan lengkap dan sesuai kondisi Anda.</p>
+            <p>Silakan isi data berikut sesuai kondisi Anda.</p>
           </div>
         </div>
       </header>
@@ -375,7 +340,7 @@ function FormPage() {
           <div className="space-y-6">
             {step === 0 && (
               <>
-                <Field label="Nama Lengkap" required error={errors.full_name} htmlFor="full_name">
+                <Field label="Nama Lengkap" error={errors.full_name} htmlFor="full_name">
                   <Input
                     id="full_name"
                     value={data.full_name}
@@ -384,7 +349,7 @@ function FormPage() {
                     onChange={(e) => set("full_name", e.target.value)}
                   />
                 </Field>
-                <Field label="Nomor WhatsApp" required error={errors.whatsapp} htmlFor="whatsapp">
+                <Field label="Nomor WhatsApp" error={errors.whatsapp} htmlFor="whatsapp">
                   <Input
                     id="whatsapp"
                     type="tel"
@@ -395,7 +360,7 @@ function FormPage() {
                     onChange={(e) => set("whatsapp", e.target.value)}
                   />
                 </Field>
-                <Field label="Email Aktif" required error={errors.email} htmlFor="email">
+                <Field label="Email Aktif" error={errors.email} htmlFor="email">
                   <Input
                     id="email"
                     type="email"
@@ -410,7 +375,7 @@ function FormPage() {
 
             {step === 1 && (
               <>
-                <Field label="Program yang Anda Minati" required error={errors.program_interest}>
+                <Field label="Program yang Anda Minati" error={errors.program_interest}>
                   <RadioGroup
                     value={data.program_interest}
                     onValueChange={(v) => set("program_interest", v)}
@@ -427,7 +392,7 @@ function FormPage() {
                     ))}
                   </RadioGroup>
                 </Field>
-                <Field label="Jenjang Studi yang Dituju" required error={errors.study_level}>
+                <Field label="Jenjang Studi yang Dituju" error={errors.study_level}>
                   <RadioGroup
                     value={data.study_level}
                     onValueChange={(v) => set("study_level", v)}
@@ -444,7 +409,7 @@ function FormPage() {
                     ))}
                   </RadioGroup>
                 </Field>
-                <Field label="Saya Mendaftar Sebagai" required error={errors.applicant_type}>
+                <Field label="Saya Mendaftar Sebagai" error={errors.applicant_type}>
                   <RadioGroup
                     value={data.applicant_type}
                     onValueChange={(v) => set("applicant_type", v)}
@@ -466,7 +431,7 @@ function FormPage() {
 
             {step === 2 && (
               <>
-                <Field label="Status Anda Saat Ini" required error={errors.current_status}>
+                <Field label="Status Anda Saat Ini" error={errors.current_status}>
                   <Select
                     value={data.current_status}
                     onValueChange={(v) => set("current_status", v)}
@@ -486,7 +451,6 @@ function FormPage() {
 
                 <Field
                   label="Nama Sekolah / Universitas / Instansi"
-                  required
                   error={errors.school_university}
                   htmlFor="school"
                 >
@@ -500,7 +464,7 @@ function FormPage() {
                 </Field>
 
                 {needsClass(data.current_status) && (
-                  <Field label="Kelas" required error={errors.class}>
+                  <Field label="Kelas" error={errors.class}>
                     <Select value={data.class} onValueChange={(v) => set("class", v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Pilih kelas" />
@@ -517,7 +481,7 @@ function FormPage() {
                 )}
 
                 {needsSemester(data.current_status) && (
-                  <Field label="Semester" required error={errors.semester}>
+                  <Field label="Semester" error={errors.semester}>
                     <Select value={data.semester} onValueChange={(v) => set("semester", v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Pilih semester" />
@@ -534,7 +498,7 @@ function FormPage() {
                 )}
 
                 {needsGraduationYear(data.current_status) && (
-                  <Field label="Tahun Lulus" required error={errors.graduation_year}>
+                  <Field label="Tahun Lulus" error={errors.graduation_year}>
                     <Select
                       value={data.graduation_year}
                       onValueChange={(v) => set("graduation_year", v)}
@@ -555,11 +519,7 @@ function FormPage() {
 
                 {needsWorkInfo(data.current_status) && (
                   <>
-                    <Field
-                      label="Sudah Bekerja Berapa Lama?"
-                      required
-                      error={errors.work_duration}
-                    >
+                    <Field label="Sudah Bekerja Berapa Lama?" error={errors.work_duration}>
                       <Select
                         value={data.work_duration}
                         onValueChange={(v) => set("work_duration", v)}
@@ -576,11 +536,7 @@ function FormPage() {
                         </SelectContent>
                       </Select>
                     </Field>
-                    <Field
-                      label="Masa Bekerja di Pekerjaan Terakhir"
-                      required
-                      error={errors.last_work_duration}
-                    >
+                    <Field label="Masa Bekerja di Pekerjaan Terakhir" error={errors.last_work_duration}>
                       <Select
                         value={data.last_work_duration}
                         onValueChange={(v) => set("last_work_duration", v)}
@@ -599,7 +555,6 @@ function FormPage() {
                     </Field>
                     <Field
                       label="Bidang Pekerjaan"
-                      required
                       error={errors.work_field}
                       htmlFor="work_field"
                     >
@@ -620,7 +575,6 @@ function FormPage() {
               <>
                 <Field
                   label="Nama Orang Tua / Wali"
-                  required
                   error={errors.parent_name}
                   htmlFor="parent_name"
                 >
@@ -633,7 +587,6 @@ function FormPage() {
                 </Field>
                 <Field
                   label="Nomor WhatsApp Orang Tua / Wali"
-                  required
                   error={errors.parent_whatsapp}
                   htmlFor="parent_whatsapp"
                 >
@@ -667,7 +620,6 @@ function FormPage() {
                 {data.parent_occupation === "Pekerjaan Lainnya" && (
                   <Field
                     label="Sebutkan Pekerjaan Lainnya"
-                    required
                     error={errors.parent_occupation_other}
                     htmlFor="occ_other"
                   >
@@ -686,7 +638,6 @@ function FormPage() {
               <>
                 <Field
                   label="Kapan Anda Berencana Memulai Kuliah di Luar Negeri?"
-                  required
                   error={errors.intake_plan}
                 >
                   <RadioGroup
@@ -707,7 +658,6 @@ function FormPage() {
                 </Field>
                 <Field
                   label="Negara Tujuan yang Diminati"
-                  required
                   error={errors.destination_country}
                   htmlFor="country"
                 >
@@ -724,7 +674,6 @@ function FormPage() {
                 </Field>
                 <Field
                   label="Program Studi / Jurusan yang Diminati"
-                  required
                   error={errors.intended_major}
                   htmlFor="major"
                 >
@@ -819,7 +768,7 @@ function FormPage() {
                 <ArrowRight className="size-4" />
               </Button>
             ) : (
-              <Button onClick={submit} disabled={submitting || !data.consent}>
+              <Button onClick={submit} disabled={submitting}>
                 {submitting ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
