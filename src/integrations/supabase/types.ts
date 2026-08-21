@@ -14,16 +14,130 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      applications: {
+        Row: {
+          applicant_type: string
+          class: string | null
+          consent: boolean
+          created_at: string
+          current_status: string
+          destination_country: string
+          email: string
+          full_name: string
+          funding_preference: string[]
+          graduation_year: number | null
+          id: string
+          intake_plan: string
+          intended_major: string
+          last_work_duration: string | null
+          parent_name: string
+          parent_occupation: string | null
+          parent_occupation_other: string | null
+          parent_whatsapp: string
+          program_interest: string
+          school_university: string
+          semester: string | null
+          study_level: string
+          updated_at: string
+          whatsapp: string
+          work_duration: string | null
+          work_field: string | null
+        }
+        Insert: {
+          applicant_type: string
+          class?: string | null
+          consent?: boolean
+          created_at?: string
+          current_status: string
+          destination_country: string
+          email: string
+          full_name: string
+          funding_preference?: string[]
+          graduation_year?: number | null
+          id?: string
+          intake_plan: string
+          intended_major: string
+          last_work_duration?: string | null
+          parent_name: string
+          parent_occupation?: string | null
+          parent_occupation_other?: string | null
+          parent_whatsapp: string
+          program_interest: string
+          school_university: string
+          semester?: string | null
+          study_level: string
+          updated_at?: string
+          whatsapp: string
+          work_duration?: string | null
+          work_field?: string | null
+        }
+        Update: {
+          applicant_type?: string
+          class?: string | null
+          consent?: boolean
+          created_at?: string
+          current_status?: string
+          destination_country?: string
+          email?: string
+          full_name?: string
+          funding_preference?: string[]
+          graduation_year?: number | null
+          id?: string
+          intake_plan?: string
+          intended_major?: string
+          last_work_duration?: string | null
+          parent_name?: string
+          parent_occupation?: string | null
+          parent_occupation_other?: string | null
+          parent_whatsapp?: string
+          program_interest?: string
+          school_university?: string
+          semester?: string | null
+          study_level?: string
+          updated_at?: string
+          whatsapp?: string
+          work_duration?: string | null
+          work_field?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_first_admin: { Args: never; Returns: boolean }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +264,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
