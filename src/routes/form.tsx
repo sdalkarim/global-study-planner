@@ -8,6 +8,12 @@ import {
   Loader2,
   Send,
   ShieldCheck,
+  Building2,
+  User,
+  Users,
+  Globe2,
+  BookOpen,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -116,12 +122,13 @@ const initialState: FormState = {
 };
 
 const STEPS = [
-  { title: "Data Peserta", subtitle: "Informasi kontak Anda" },
-  { title: "Minat Studi", subtitle: "Program & jenjang yang dituju" },
-  { title: "Pendidikan", subtitle: "Status & institusi saat ini" },
-  { title: "Orang Tua / Wali", subtitle: "Data pendamping" },
-  { title: "Rencana Studi", subtitle: "Negara, jurusan & pembiayaan" },
-  { title: "Persetujuan", subtitle: "Konfirmasi & kirim" },
+  { id: 1, title: "Data Peserta", subtitle: "Informasi kontak Anda", icon: User },
+  { id: 2, title: "Minat Studi", subtitle: "Program & jenjang yang dituju", icon: GraduationCap },
+  { id: 3, title: "Status Pendidikan", subtitle: "Status pendidikan & pekerjaan saat ini", icon: Building2 },
+  { id: 4, title: "Orang Tua / Wali", subtitle: "Data pendamping", icon: Users },
+  { id: 5, title: "Data Pendidikan", subtitle: "Institusi & tingkat pendidikan", icon: BookOpen },
+  { id: 6, title: "Rencana Studi", subtitle: "Negara, jurusan & pembiayaan", icon: Globe2 },
+  { id: 7, title: "Konfirmasi", subtitle: "Pernyataan persetujuan & kirim", icon: ShieldCheck },
 ];
 
 type Errors = Partial<Record<keyof FormState, string>>;
@@ -150,8 +157,8 @@ function Field({
   htmlFor?: string;
 }) {
   return (
-    <div>
-      <Label htmlFor={htmlFor} className="mb-2 block text-sm font-semibold">
+    <div className="space-y-1.5">
+      <Label htmlFor={htmlFor} className="block text-xs sm:text-sm font-semibold text-foreground">
         {label}
       </Label>
       {children}
@@ -172,15 +179,14 @@ function FormPage() {
     setErrors((e) => ({ ...e, [key]: undefined }));
   };
 
-  const progress = useMemo(() => Math.round(((step + (done ? 1 : 0)) / STEPS.length) * 100), [
-    step,
-    done,
-  ]);
+  const progress = useMemo(
+    () => Math.round(((step + 1) / STEPS.length) * 100),
+    [step]
+  );
 
   function validateStep(index: number): boolean {
     const e: Errors = {};
     if (index === 0) {
-      // Only format validation if user entered data (optional)
       if (data.whatsapp.trim() && !isPhone(data.whatsapp)) {
         e.whatsapp = "Format nomor WhatsApp tidak valid.";
       }
@@ -212,7 +218,7 @@ function FormPage() {
   }
 
   async function submit() {
-    for (let i = 0; i <= 5; i++) {
+    for (let i = 0; i < STEPS.length; i++) {
       if (!validateStep(i)) {
         setStep(i);
         toast.error("Mohon periksa kembali format data yang diisi.");
@@ -253,7 +259,7 @@ function FormPage() {
     const { error } = await supabase.from("applications").insert(payload);
     setSubmitting(false);
     if (error) {
-      toast.error("Gagal mengirim formulir. Silakan coba lagi: " + error.message);
+      toast.error("Gagal mengirim formulir: " + error.message);
       return;
     }
     toast.success("Formulir berhasil dikirim!");
@@ -263,18 +269,18 @@ function FormPage() {
 
   if (done) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-background px-4 py-16">
-        <div className="card-elevated w-full max-w-lg p-8 text-center sm:p-12">
-          <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-success/10">
-            <CheckCircle2 className="size-8 text-success" />
+      <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+        <div className="card-elevated w-full max-w-md p-6 text-center sm:p-10 rounded-2xl">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <CheckCircle2 className="h-10 w-10" />
           </div>
-          <h1 className="mt-6 text-3xl font-bold">Terima Kasih!</h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+          <h1 className="mt-6 text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Terima Kasih!</h1>
+          <p className="mt-3 text-xs sm:text-sm leading-relaxed text-muted-foreground">
             Data Anda telah berhasil dikirim. Tim kami akan menghubungi Anda untuk memberikan
             informasi dan arahan terkait persiapan kuliah ke luar negeri.
           </p>
           <Button
-            className="mt-8 w-full sm:w-auto"
+            className="mt-8 w-full min-h-[44px] bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold shadow-md"
             onClick={() => {
               setData(initialState);
               setStep(0);
@@ -288,56 +294,95 @@ function FormPage() {
     );
   }
 
+  const currentStepInfo = STEPS[step]!;
+  const StepIcon = currentStepInfo.icon;
+
   return (
-    <main className="min-h-screen bg-background pb-20">
-      <header className="bg-hero-gradient relative overflow-hidden px-4 pb-24 pt-14 text-primary-foreground sm:px-8">
-        <div className="mx-auto max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-sidebar-border/60 bg-sidebar-accent/40 px-3 py-1 text-xs font-semibold tracking-wide">
-            <GraduationCap className="size-4" />
-            Konsultasi Studi Luar Negeri
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-28 font-sans antialiased text-slate-900 dark:text-slate-100">
+      {/* Header Banner */}
+      <header className="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 px-4 pb-20 pt-10 text-white sm:px-8 shadow-md">
+        <div className="mx-auto max-w-2xl text-center space-y-3">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-xs font-semibold text-emerald-400 backdrop-blur-sm">
+            <GraduationCap className="h-4 w-4" />
+            <span>Konsultasi Studi Luar Negeri</span>
           </div>
-          <h1 className="mt-5 text-3xl font-bold leading-tight sm:text-[2.6rem]">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight leading-tight">
             Persiapan Kuliah ke Luar Negeri{" "}
-            <span className="text-gradient-gold">Dimulai dari Sekarang</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">
+              Dimulai dari Sekarang
+            </span>
           </h1>
-          <div className="mt-5 space-y-3 text-sm leading-relaxed opacity-90 sm:text-base">
-            <p>
-              Kuliah ke luar negeri bukan hanya tentang memilih universitas atau negara tujuan.
-              Persiapan yang tepat perlu dimulai sejak dini, mulai dari menentukan jurusan, memilih
-              negara tujuan, memahami persyaratan masuk, mempersiapkan kemampuan bahasa, hingga
-              mencari peluang beasiswa.
-            </p>
-            <p>
-              Melalui form ini, kami ingin memahami profil dan rencana studi Anda agar dapat
-              memberikan informasi, arahan, dan rekomendasi yang sesuai dengan kebutuhan persiapan
-              kuliah ke luar negeri.
-            </p>
-            <p>Silakan isi data berikut sesuai kondisi Anda.</p>
-          </div>
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xl mx-auto opacity-90">
+            Isi profil dan rencana studi Anda untuk mendapatkan konsultasi & rekomendasi program kuliah luar negeri yang tepat.
+          </p>
         </div>
       </header>
 
-      <div className="mx-auto -mt-16 max-w-3xl px-4 sm:px-8">
-        <div className="card-elevated p-5 sm:p-8">
-          {/* Progress */}
-          <div className="mb-8">
-            <div className="flex items-baseline justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Langkah {step + 1} dari {STEPS.length}
-              </p>
-              <p className="text-xs font-semibold text-muted-foreground">{progress}%</p>
-            </div>
-            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="bg-gold-gradient h-full rounded-full transition-all duration-500"
-                style={{ width: `${Math.max(progress, 6)}%` }}
-              />
-            </div>
-            <h2 className="mt-4 text-xl font-bold">{STEPS[step]!.title}</h2>
-            <p className="text-sm text-muted-foreground">{STEPS[step]!.subtitle}</p>
+      {/* Main Content Container */}
+      <div className="mx-auto -mt-12 max-w-2xl px-3 sm:px-6">
+        {/* Step Progress Bar & Horizontal Compact Indicator */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 shadow-lg border border-slate-200/80 dark:border-slate-800 mb-4 space-y-3">
+          <div className="flex items-center justify-between text-xs font-semibold">
+            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+              <StepIcon className="h-4 w-4" />
+              <span>Langkah {step + 1} dari {STEPS.length}</span>
+            </span>
+            <span className="text-slate-500 font-mono">{progress}%</span>
           </div>
 
-          <div className="space-y-6">
+          {/* Progress Bar */}
+          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+            <div
+              className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+
+          {/* Horizontal Mobile Scrollable Step Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 no-scrollbar text-[11px]">
+            {STEPS.map((s, idx) => {
+              const isCompleted = idx < step;
+              const isCurrent = idx === step;
+
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => setStep(idx)}
+                  type="button"
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full whitespace-nowrap transition-all border font-medium ${
+                    isCurrent
+                      ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                      : isCompleted
+                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
+                      : "bg-slate-50 text-slate-500 dark:bg-slate-800/60 dark:text-slate-400 border-slate-200 dark:border-slate-800"
+                  }`}
+                >
+                  {isCompleted ? (
+                    <Check className="h-3 w-3" />
+                  ) : (
+                    <span>{s.id}.</span>
+                  )}
+                  <span>{s.title}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Current Step Form Card */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-8 shadow-xl border border-slate-200/80 dark:border-slate-800 space-y-6">
+          <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <StepIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <span>{currentStepInfo.title}</span>
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+              {currentStepInfo.subtitle}
+            </p>
+          </div>
+
+          <div className="space-y-5">
+            {/* STEP 1: Data Peserta */}
             {step === 0 && (
               <>
                 <Field label="Nama Lengkap" error={errors.full_name} htmlFor="full_name">
@@ -346,6 +391,7 @@ function FormPage() {
                     value={data.full_name}
                     maxLength={120}
                     placeholder="Nama sesuai dokumen resmi"
+                    className="min-h-[44px] text-sm"
                     onChange={(e) => set("full_name", e.target.value)}
                   />
                 </Field>
@@ -357,6 +403,7 @@ function FormPage() {
                     maxLength={20}
                     placeholder="08xxxxxxxxxx"
                     value={data.whatsapp}
+                    className="min-h-[44px] text-sm"
                     onChange={(e) => set("whatsapp", e.target.value)}
                   />
                 </Field>
@@ -367,61 +414,65 @@ function FormPage() {
                     maxLength={255}
                     placeholder="nama@email.com"
                     value={data.email}
+                    className="min-h-[44px] text-sm"
                     onChange={(e) => set("email", e.target.value)}
                   />
                 </Field>
               </>
             )}
 
+            {/* STEP 2: Minat Studi */}
             {step === 1 && (
               <>
                 <Field label="Program yang Anda Minati" error={errors.program_interest}>
                   <RadioGroup
                     value={data.program_interest}
                     onValueChange={(v) => set("program_interest", v)}
-                    className="gap-3"
+                    className="gap-2.5"
                   >
                     {PROGRAM_INTEREST.map((o) => (
                       <label
                         key={o}
-                        className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-card p-4 text-sm transition-colors hover:border-accent has-[button[data-state=checked]]:border-accent has-[button[data-state=checked]]:bg-secondary"
+                        className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 p-3.5 text-xs sm:text-sm font-medium transition-all hover:border-emerald-500 has-[button[data-state=checked]]:border-emerald-600 has-[button[data-state=checked]]:bg-emerald-50/50 dark:has-[button[data-state=checked]]:bg-emerald-950/40 min-h-[48px]"
                       >
                         <RadioGroupItem value={o} />
-                        <span className="font-medium">{o}</span>
+                        <span className="text-slate-800 dark:text-slate-200">{o}</span>
                       </label>
                     ))}
                   </RadioGroup>
                 </Field>
+
                 <Field label="Jenjang Studi yang Dituju" error={errors.study_level}>
                   <RadioGroup
                     value={data.study_level}
                     onValueChange={(v) => set("study_level", v)}
-                    className="gap-3"
+                    className="gap-2.5"
                   >
                     {STUDY_LEVEL.map((o) => (
                       <label
                         key={o}
-                        className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-card p-4 text-sm transition-colors hover:border-accent has-[button[data-state=checked]]:border-accent has-[button[data-state=checked]]:bg-secondary"
+                        className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 p-3.5 text-xs sm:text-sm font-medium transition-all hover:border-emerald-500 has-[button[data-state=checked]]:border-emerald-600 has-[button[data-state=checked]]:bg-emerald-50/50 dark:has-[button[data-state=checked]]:bg-emerald-950/40 min-h-[48px]"
                       >
                         <RadioGroupItem value={o} />
-                        <span className="font-medium">{o}</span>
+                        <span className="text-slate-800 dark:text-slate-200">{o}</span>
                       </label>
                     ))}
                   </RadioGroup>
                 </Field>
+
                 <Field label="Saya Mendaftar Sebagai" error={errors.applicant_type}>
                   <RadioGroup
                     value={data.applicant_type}
                     onValueChange={(v) => set("applicant_type", v)}
-                    className="gap-3 sm:grid-cols-2"
+                    className="gap-2.5 sm:grid-cols-2"
                   >
                     {APPLICANT_TYPE.map((o) => (
                       <label
                         key={o}
-                        className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-card p-4 text-sm transition-colors hover:border-accent has-[button[data-state=checked]]:border-accent has-[button[data-state=checked]]:bg-secondary"
+                        className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 p-3.5 text-xs sm:text-sm font-medium transition-all hover:border-emerald-500 has-[button[data-state=checked]]:border-emerald-600 has-[button[data-state=checked]]:bg-emerald-50/50 dark:has-[button[data-state=checked]]:bg-emerald-950/40 min-h-[48px]"
                       >
                         <RadioGroupItem value={o} />
-                        <span className="font-medium">{o}</span>
+                        <span className="text-slate-800 dark:text-slate-200">{o}</span>
                       </label>
                     ))}
                   </RadioGroup>
@@ -429,6 +480,7 @@ function FormPage() {
               </>
             )}
 
+            {/* STEP 3: Status Pendidikan */}
             {step === 2 && (
               <>
                 <Field label="Status Anda Saat Ini" error={errors.current_status}>
@@ -436,7 +488,7 @@ function FormPage() {
                     value={data.current_status}
                     onValueChange={(v) => set("current_status", v)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="min-h-[44px] text-sm">
                       <SelectValue placeholder="Pilih status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -449,24 +501,10 @@ function FormPage() {
                   </Select>
                 </Field>
 
-                <Field
-                  label="Nama Sekolah / Universitas / Instansi"
-                  error={errors.school_university}
-                  htmlFor="school"
-                >
-                  <Input
-                    id="school"
-                    maxLength={160}
-                    value={data.school_university}
-                    placeholder="Contoh: SMA Negeri 1 Jakarta"
-                    onChange={(e) => set("school_university", e.target.value)}
-                  />
-                </Field>
-
                 {needsClass(data.current_status) && (
                   <Field label="Kelas" error={errors.class}>
                     <Select value={data.class} onValueChange={(v) => set("class", v)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="min-h-[44px] text-sm">
                         <SelectValue placeholder="Pilih kelas" />
                       </SelectTrigger>
                       <SelectContent>
@@ -483,7 +521,7 @@ function FormPage() {
                 {needsSemester(data.current_status) && (
                   <Field label="Semester" error={errors.semester}>
                     <Select value={data.semester} onValueChange={(v) => set("semester", v)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="min-h-[44px] text-sm">
                         <SelectValue placeholder="Pilih semester" />
                       </SelectTrigger>
                       <SelectContent>
@@ -503,7 +541,7 @@ function FormPage() {
                       value={data.graduation_year}
                       onValueChange={(v) => set("graduation_year", v)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="min-h-[44px] text-sm">
                         <SelectValue placeholder="Pilih tahun lulus" />
                       </SelectTrigger>
                       <SelectContent>
@@ -524,7 +562,7 @@ function FormPage() {
                         value={data.work_duration}
                         onValueChange={(v) => set("work_duration", v)}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="min-h-[44px] text-sm">
                           <SelectValue placeholder="Pilih lama bekerja" />
                         </SelectTrigger>
                         <SelectContent>
@@ -541,7 +579,7 @@ function FormPage() {
                         value={data.last_work_duration}
                         onValueChange={(v) => set("last_work_duration", v)}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="min-h-[44px] text-sm">
                           <SelectValue placeholder="Pilih masa bekerja" />
                         </SelectTrigger>
                         <SelectContent>
@@ -553,16 +591,13 @@ function FormPage() {
                         </SelectContent>
                       </Select>
                     </Field>
-                    <Field
-                      label="Bidang Pekerjaan"
-                      error={errors.work_field}
-                      htmlFor="work_field"
-                    >
+                    <Field label="Bidang Pekerjaan" error={errors.work_field} htmlFor="work_field">
                       <Input
                         id="work_field"
                         maxLength={120}
                         value={data.work_field}
                         placeholder="Contoh: Teknologi Informasi"
+                        className="min-h-[44px] text-sm"
                         onChange={(e) => set("work_field", e.target.value)}
                       />
                     </Field>
@@ -571,17 +606,16 @@ function FormPage() {
               </>
             )}
 
+            {/* STEP 4: Data Orang Tua / Wali */}
             {step === 3 && (
               <>
-                <Field
-                  label="Nama Orang Tua / Wali"
-                  error={errors.parent_name}
-                  htmlFor="parent_name"
-                >
+                <Field label="Nama Orang Tua / Wali" error={errors.parent_name} htmlFor="parent_name">
                   <Input
                     id="parent_name"
                     maxLength={120}
                     value={data.parent_name}
+                    placeholder="Nama orang tua/wali"
+                    className="min-h-[44px] text-sm"
                     onChange={(e) => set("parent_name", e.target.value)}
                   />
                 </Field>
@@ -597,6 +631,7 @@ function FormPage() {
                     maxLength={20}
                     placeholder="08xxxxxxxxxx"
                     value={data.parent_whatsapp}
+                    className="min-h-[44px] text-sm"
                     onChange={(e) => set("parent_whatsapp", e.target.value)}
                   />
                 </Field>
@@ -605,7 +640,7 @@ function FormPage() {
                     value={data.parent_occupation}
                     onValueChange={(v) => set("parent_occupation", v)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="min-h-[44px] text-sm">
                       <SelectValue placeholder="Pilih pekerjaan" />
                     </SelectTrigger>
                     <SelectContent>
@@ -627,6 +662,8 @@ function FormPage() {
                       id="occ_other"
                       maxLength={120}
                       value={data.parent_occupation_other}
+                      placeholder="Sebutkan pekerjaan"
+                      className="min-h-[44px] text-sm"
                       onChange={(e) => set("parent_occupation_other", e.target.value)}
                     />
                   </Field>
@@ -634,7 +671,82 @@ function FormPage() {
               </>
             )}
 
+            {/* STEP 5: Data Pendidikan */}
             {step === 4 && (
+              <>
+                <Field
+                  label="Nama Sekolah / Universitas / Instansi"
+                  error={errors.school_university}
+                  htmlFor="school"
+                >
+                  <Input
+                    id="school"
+                    maxLength={160}
+                    value={data.school_university}
+                    placeholder="Contoh: SMA Negeri 1 Jakarta / Universitas Indonesia"
+                    className="min-h-[44px] text-sm"
+                    onChange={(e) => set("school_university", e.target.value)}
+                  />
+                </Field>
+
+                {needsClass(data.current_status) && (
+                  <Field label="Kelas" error={errors.class}>
+                    <Select value={data.class} onValueChange={(v) => set("class", v)}>
+                      <SelectTrigger className="min-h-[44px] text-sm">
+                        <SelectValue placeholder="Pilih kelas" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CLASS_OPTIONS.map((o) => (
+                          <SelectItem key={o} value={o}>
+                            {o}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                )}
+
+                {needsSemester(data.current_status) && (
+                  <Field label="Semester" error={errors.semester}>
+                    <Select value={data.semester} onValueChange={(v) => set("semester", v)}>
+                      <SelectTrigger className="min-h-[44px] text-sm">
+                        <SelectValue placeholder="Pilih semester" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SEMESTER_OPTIONS.map((o) => (
+                          <SelectItem key={o} value={o}>
+                            {o}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                )}
+
+                {needsGraduationYear(data.current_status) && (
+                  <Field label="Tahun Lulus" error={errors.graduation_year}>
+                    <Select
+                      value={data.graduation_year}
+                      onValueChange={(v) => set("graduation_year", v)}
+                    >
+                      <SelectTrigger className="min-h-[44px] text-sm">
+                        <SelectValue placeholder="Pilih tahun lulus" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {GRADUATION_YEARS.map((y) => (
+                          <SelectItem key={y} value={String(y)}>
+                            {y}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                )}
+              </>
+            )}
+
+            {/* STEP 6: Rencana Studi */}
+            {step === 5 && (
               <>
                 <Field
                   label="Kapan Anda Berencana Memulai Kuliah di Luar Negeri?"
@@ -643,19 +755,20 @@ function FormPage() {
                   <RadioGroup
                     value={data.intake_plan}
                     onValueChange={(v) => set("intake_plan", v)}
-                    className="gap-3"
+                    className="gap-2.5"
                   >
                     {INTAKE_PLAN.map((o) => (
                       <label
                         key={o}
-                        className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-card p-4 text-sm transition-colors hover:border-accent has-[button[data-state=checked]]:border-accent has-[button[data-state=checked]]:bg-secondary"
+                        className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 p-3.5 text-xs sm:text-sm font-medium transition-all hover:border-emerald-500 has-[button[data-state=checked]]:border-emerald-600 has-[button[data-state=checked]]:bg-emerald-50/50 dark:has-[button[data-state=checked]]:bg-emerald-950/40 min-h-[48px]"
                       >
                         <RadioGroupItem value={o} />
-                        <span className="font-medium">{o}</span>
+                        <span className="text-slate-800 dark:text-slate-200">{o}</span>
                       </label>
                     ))}
                   </RadioGroup>
                 </Field>
+
                 <Field
                   label="Negara Tujuan yang Diminati"
                   error={errors.destination_country}
@@ -666,12 +779,14 @@ function FormPage() {
                     maxLength={200}
                     placeholder="Contoh: Jerman, Belanda, Jepang"
                     value={data.destination_country}
+                    className="min-h-[44px] text-sm"
                     onChange={(e) => set("destination_country", e.target.value)}
                   />
-                  <p className="mt-1.5 text-xs text-muted-foreground">
+                  <p className="mt-1 text-[11px] text-slate-500">
                     Boleh lebih dari satu, pisahkan dengan koma.
                   </p>
                 </Field>
+
                 <Field
                   label="Program Studi / Jurusan yang Diminati"
                   error={errors.intended_major}
@@ -682,17 +797,19 @@ function FormPage() {
                     maxLength={200}
                     placeholder="Contoh: Computer Science"
                     value={data.intended_major}
+                    className="min-h-[44px] text-sm"
                     onChange={(e) => set("intended_major", e.target.value)}
                   />
                 </Field>
+
                 <Field label="Rencana Pembiayaan Studi">
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     {FUNDING_PREFERENCE.map((o) => {
                       const checked = data.funding_preference.includes(o);
                       return (
                         <label
                           key={o}
-                          className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-card p-4 text-sm transition-colors hover:border-accent has-[button[data-state=checked]]:border-accent has-[button[data-state=checked]]:bg-secondary"
+                          className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 p-3.5 text-xs sm:text-sm font-medium transition-all hover:border-emerald-500 has-[button[data-state=checked]]:border-emerald-600 has-[button[data-state=checked]]:bg-emerald-50/50 dark:has-[button[data-state=checked]]:bg-emerald-950/40 min-h-[48px]"
                         >
                           <Checkbox
                             checked={checked}
@@ -701,11 +818,11 @@ function FormPage() {
                                 "funding_preference",
                                 v
                                   ? [...data.funding_preference, o]
-                                  : data.funding_preference.filter((f) => f !== o),
+                                  : data.funding_preference.filter((f) => f !== o)
                               )
                             }
                           />
-                          <span className="font-medium">{o}</span>
+                          <span className="text-slate-800 dark:text-slate-200">{o}</span>
                         </label>
                       );
                     })}
@@ -714,41 +831,54 @@ function FormPage() {
               </>
             )}
 
-            {step === 5 && (
+            {/* STEP 7: Konfirmasi */}
+            {step === 6 && (
               <>
-                <div className="rounded-xl border border-border bg-secondary/60 p-5 text-sm leading-relaxed">
-                  <ShieldCheck className="mb-3 size-5 text-accent" />
-                  Saya menyatakan bahwa data yang diberikan benar dan bersedia dihubungi untuk
-                  mendapatkan informasi, konsultasi, serta rekomendasi program persiapan kuliah ke
-                  luar negeri sesuai kebutuhan saya.
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/50 p-4 sm:p-5 text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-300 space-y-2">
+                  <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold">
+                    <ShieldCheck className="h-5 w-5 shrink-0" />
+                    <span>Pernyataan Persetujuan</span>
+                  </div>
+                  <p>
+                    Saya menyatakan bahwa data yang diberikan benar dan bersedia dihubungi untuk
+                    mendapatkan informasi, konsultasi, serta rekomendasi program persiapan kuliah ke
+                    luar negeri sesuai kebutuhan saya.
+                  </p>
                 </div>
-                <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-card p-4 text-sm font-semibold">
+
+                <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-xs sm:text-sm font-semibold min-h-[48px]">
                   <Checkbox
                     checked={data.consent}
                     onCheckedChange={(v) => set("consent", Boolean(v))}
                   />
-                  Saya menyetujui
+                  <span>Saya menyetujui</span>
                 </label>
-                <FieldError message={errors.consent} />
 
-                <div className="rounded-xl border border-border p-5">
-                  <h3 className="text-base font-bold">Ringkasan Data</h3>
-                  <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+                {/* Summary Box */}
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4 sm:p-5 space-y-3 bg-white dark:bg-slate-900">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Ringkasan Data yang Diisi
+                  </h3>
+                  <dl className="grid gap-3 text-xs sm:grid-cols-2">
                     {[
-                      ["Nama", data.full_name],
+                      ["Nama Lengkap", data.full_name],
                       ["WhatsApp", data.whatsapp],
                       ["Email", data.email],
-                      ["Program", data.program_interest],
+                      ["Program Minat", data.program_interest],
                       ["Jenjang", data.study_level],
-                      ["Status", data.current_status],
-                      ["Institusi", data.school_university],
+                      ["Mendaftar Sebagai", data.applicant_type],
+                      ["Status Saat Ini", data.current_status],
+                      ["Sekolah / Univ", data.school_university],
+                      ["Orang Tua / Wali", data.parent_name],
                       ["Negara Tujuan", data.destination_country],
-                      ["Jurusan", data.intended_major],
+                      ["Program Studi", data.intended_major],
                       ["Rencana Intake", data.intake_plan],
                     ].map(([k, v]) => (
-                      <div key={k}>
-                        <dt className="text-xs text-muted-foreground">{k}</dt>
-                        <dd className="font-medium">{v || "-"}</dd>
+                      <div key={k} className="border-b border-slate-100 dark:border-slate-800/80 pb-1.5">
+                        <dt className="text-[10px] text-slate-400 uppercase font-semibold">{k}</dt>
+                        <dd className="font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                          {v || <span className="text-slate-400 font-normal italic">Belum diisi</span>}
+                        </dd>
                       </div>
                     ))}
                   </dl>
@@ -756,41 +886,59 @@ function FormPage() {
               </>
             )}
           </div>
-
-          <div className="mt-8 flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:justify-between">
-            <Button variant="outline" onClick={back} disabled={step === 0 || submitting}>
-              <ArrowLeft className="size-4" />
-              Kembali
-            </Button>
-            {step < STEPS.length - 1 ? (
-              <Button onClick={next}>
-                Lanjutkan
-                <ArrowRight className="size-4" />
-              </Button>
-            ) : (
-              <Button onClick={submit} disabled={submitting}>
-                {submitting ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    Mengirim...
-                  </>
-                ) : (
-                  <>
-                    <Send className="size-4" />
-                    Kirim Formulir
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
         </div>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          Area admin?{" "}
-          <Link to="/admin/login" className="font-semibold underline underline-offset-4">
-            Masuk di sini
+        <p className="mt-6 text-center text-xs text-slate-500">
+          Area administrator?{" "}
+          <Link to="/admin/login" className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
+            Masuk ke Portal Admin
           </Link>
         </p>
+      </div>
+
+      {/* Sticky Bottom Navigation Bar for Mobile & Desktop */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 py-3 px-4 shadow-2xl">
+        <div className="mx-auto max-w-2xl flex items-center justify-between gap-3">
+          <Button
+            variant="outline"
+            onClick={back}
+            disabled={step === 0 || submitting}
+            className={`min-h-[44px] px-4 text-xs font-semibold gap-1.5 border-slate-300 dark:border-slate-700 ${
+              step === 0 ? "invisible" : ""
+            }`}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Kembali</span>
+          </Button>
+
+          {step < STEPS.length - 1 ? (
+            <Button
+              onClick={next}
+              className="min-h-[44px] px-6 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white ml-auto shadow-md"
+            >
+              <span>Lanjutkan</span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              onClick={submit}
+              disabled={submitting}
+              className="min-h-[44px] px-6 text-xs font-semibold gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white ml-auto shadow-lg"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Mengirim...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  <span>Kirim Formulir</span>
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
     </main>
   );
