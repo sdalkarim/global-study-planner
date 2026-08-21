@@ -312,9 +312,17 @@ function FormPage() {
               Dimulai dari Sekarang
             </span>
           </h1>
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xl mx-auto opacity-90">
-            Isi profil dan rencana studi Anda untuk mendapatkan konsultasi & rekomendasi program kuliah luar negeri yang tepat.
-          </p>
+          <div className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xl mx-auto opacity-90 space-y-2">
+            <p>
+              Kuliah ke luar negeri bukan hanya tentang memilih universitas. Ada banyak hal yang
+              perlu dipersiapkan sejak dini, mulai dari jurusan, negara tujuan, persyaratan,
+              kemampuan bahasa, hingga peluang beasiswa.
+            </p>
+            <p>
+              Melalui form ini, kami ingin memahami rencana Anda agar dapat memberikan arahan dan
+              rekomendasi persiapan yang tepat.
+            </p>
+          </div>
         </div>
       </header>
 
